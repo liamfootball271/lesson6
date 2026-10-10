@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f1" />
+    <title>Les articles — Atelier</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="auth.js" defer></script>
+  </head>
+  <body data-page="articles">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Atelier, accueil">
+        <span class="brand-mark" aria-hidden="true">a.</span>
+        <span>atelier</span>
+      </a>
+      <nav class="header-nav" aria-label="Menu principal">
+        <a class="nav-link" href="index.html">Mon espace</a>
+        <a class="button button-small" href="auth.html">Connexion</a>
+        <a class="button button-small" id="write-article-link" href="write-article.html" hidden>Écrire un article</a>
+      </nav>
+    </header>
+
+    <main class="articles-layout">
+      <section class="articles-heading" aria-labelledby="articles-title">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Le journal d’atelier</p>
+        <h1 id="articles-title">Tous les articles<span class="accent-dot">.</span></h1>
+        <p>Retrouvez les textes publiés, du plus récent au plus ancien.</p>
+      </section>
+      <div class="article-list" id="article-list" aria-live="polite">
+        <p class="empty-state" id="articles-loading">Chargement des articles…</p>
+      </div>
+    </main>
+    <footer class="site-footer"><span>© 2026 atelier</span><span>Le journal d’atelier</span></footer>
+  </body>
+</html>

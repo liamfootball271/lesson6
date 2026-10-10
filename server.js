@@ -12,7 +12,7 @@ const sessionDuration = 8 * 60 * 60 * 1000;
 const sessions = new Map();
 const scrypt = promisify(crypto.scrypt);
 const pepper = process.env.PASSWORD_PEPPER || 'change-this-development-pepper';
-const publicFiles = new Set(['/','/index.html','/login.html','/auth.html','/auth.js','/styles.css']);
+const publicFiles = new Set(['/','/index.html','/login.html','/auth.html','/auth.js','/styles.css','/articles.html','/write-article.html']);
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -24,9 +24,10 @@ if (!process.env.PASSWORD_PEPPER) {
 }
 
 function readDatabase() {
-  if (!fs.existsSync(databasePath)) fs.writeFileSync(databasePath, JSON.stringify({ users: [] }, null, 2));
+  if (!fs.existsSync(databasePath)) fs.writeFileSync(databasePath, JSON.stringify({ users: [], articles: [] }, null, 2));
   const database = JSON.parse(fs.readFileSync(databasePath, 'utf8'));
   if (!Array.isArray(database.users)) throw new Error('Le fichier db.json doit contenir un tableau users.');
+  if (!Array.isArray(database.articles)) database.articles = [];
   return database;
 }
 
@@ -46,7 +47,7 @@ function readJsonBody(request) {
     let body = '';
     request.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 16_384) {
+      if (body.length > 100_000) {
         reject(new Error('Requête trop volumineuse.'));
         request.destroy();
       }
@@ -147,6 +148,56 @@ async function handleApi(request, response, pathname) {
   if (request.method === 'GET' && pathname === '/api/me') {
     const user = getSessionUser(request);
     sendJson(response, user ? 200 : 401, user ? { user } : { error: 'Connexion requise.' });
+    return;
+  }
+
+  if (request.method === 'GET' && pathname === '/api/articles') {
+    const database = readDatabase();
+    const user = getSessionUser(request);
+    const articles = database.articles
+      .filter((article) => article.publier === true || user?.auteur === true)
+      .sort((first, second) => Date.parse(second.date) - Date.parse(first.date));
+    sendJson(response, 200, { articles });
+    return;
+  }
+
+  if (request.method === 'POST' && pathname === '/api/articles') {
+    const user = getSessionUser(request);
+    if (!user) {
+      sendJson(response, 401, { error: 'Connectez-vous pour écrire un article.' });
+      return;
+    }
+    if (!user.auteur) {
+      sendJson(response, 403, { error: 'Seuls les auteurs peuvent ajouter un article.' });
+      return;
+    }
+
+    let body;
+    try {
+      body = await readJsonBody(request);
+    } catch (error) {
+      sendJson(response, 400, { error: error.message });
+      return;
+    }
+    const titre = typeof body.titre === 'string' ? body.titre.trim() : '';
+    const article = typeof body.article === 'string' ? body.article.trim() : '';
+    if (!titre || titre.length > 160 || !article || article.length > 20_000 || typeof body.publier !== 'boolean') {
+      sendJson(response, 400, { error: 'Saisissez un titre (160 caractères maximum), un article (20 000 caractères maximum) et un choix de publication.' });
+      return;
+    }
+
+    const database = readDatabase();
+    const newArticle = {
+      id: crypto.randomUUID(),
+      titre,
+      article,
+      date: new Date().toISOString(),
+      publier: body.publier,
+      auteur: user.email,
+    };
+    database.articles.push(newArticle);
+    writeDatabase(database);
+    sendJson(response, 201, { article: newArticle });
     return;
   }
 
