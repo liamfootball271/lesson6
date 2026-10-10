@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "email": "mylanmylansseerr@gmail.com",
+      "passwordHash": "df7b1ed3b5b66ca453bc650abe2a46cea7cc3484217989f71cf21c0fc32d957ac4bd4e1011742bdfc511634a91c06ed2d3c298c31671d1021b81c4bdb222d671",
+      "salt": "a2f98685ba2db2c735b67d4ea976f11b",
+      "auteur": false
+    },
+    {
+      "email": "mylan.stroeken@gmail.com",
+      "passwordHash": "e115d2e9beffddcf4a47983249ba96d470c4de441f3e09a93d30c7baddd230d9cac5af4285c6c3f9a4e5494fbb731664208dec436fe265a7a1726fa2fd0d211e",
+      "salt": "a83df187bffd8eb15eecd252c03590dd",
+      "auteur": false
+    }
+  ]
+}

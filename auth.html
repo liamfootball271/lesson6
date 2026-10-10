@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f1" />
+    <title>Connexion — Atelier</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-page="auth">
+    <header class="site-header">
+      <a class="brand" href="/auth.html" aria-label="Atelier, accueil">
+        <span class="brand-mark" aria-hidden="true">a.</span>
+        <span>atelier</span>
+      </a>
+      <nav class="header-nav" aria-label="Menu principal">
+        <a class="nav-link" href="#connexion" data-open-tab="login">Se connecter</a>
+        <a class="button button-small" href="#inscription" data-open-tab="register">Créer un compte</a>
+      </nav>
+    </header>
+
+    <main class="auth-layout">
+      <section class="intro-panel" aria-labelledby="intro-title">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> Votre espace, tout simplement</div>
+        <h1 id="intro-title">Un endroit à vous.<br /><span>Prêt à commencer&nbsp;?</span></h1>
+        <p>Connectez-vous ou créez votre compte pour accéder à votre espace personnel.</p>
+        <div class="mini-note"><span aria-hidden="true">✦</span> Simple, rapide et pensé pour vous.</div>
+        <div class="decor decor-one" aria-hidden="true"></div>
+        <div class="decor decor-two" aria-hidden="true"></div>
+      </section>
+
+      <section class="form-panel" aria-label="Formulaire de compte">
+        <div class="form-heading">
+          <p class="eyebrow">Bienvenue</p>
+          <h2 id="form-title">Ravi de vous revoir</h2>
+          <p id="form-subtitle">Entrez vos informations pour vous connecter.</p>
+        </div>
+        <div class="tab-list" role="tablist" aria-label="Type de formulaire">
+          <button class="tab-button is-active" id="login-tab" type="button" role="tab" aria-selected="true" aria-controls="login-form" data-tab="login">Connexion</button>
+          <button class="tab-button" id="register-tab" type="button" role="tab" aria-selected="false" aria-controls="register-form" data-tab="register">Créer un compte</button>
+        </div>
+
+        <form id="login-form" class="auth-form" autocomplete="on" role="tabpanel" aria-labelledby="login-tab">
+          <label for="login-email">Adresse e-mail</label>
+          <input id="login-email" name="email" type="email" placeholder="vous@exemple.fr" autocomplete="email" required />
+          <label for="login-password">Mot de passe</label>
+          <input id="login-password" name="password" type="password" placeholder="Votre mot de passe" autocomplete="current-password" required />
+          <p class="form-message" id="login-message" role="status" aria-live="polite"></p>
+          <button class="button button-submit" type="submit">Se connecter <span aria-hidden="true">→</span></button>
+          <p class="form-footnote">Pas encore de compte&nbsp;? <button class="text-button" type="button" data-open-tab="register">Inscrivez-vous</button></p>
+        </form>
+
+        <form id="register-form" class="auth-form" autocomplete="on" role="tabpanel" aria-labelledby="register-tab" hidden>
+          <label for="register-email">Adresse e-mail</label>
+          <input id="register-email" name="email" type="email" placeholder="vous@exemple.fr" autocomplete="email" required />
+          <label for="register-password">Mot de passe</label>
+          <input id="register-password" name="password" type="password" placeholder="8 caractères minimum" autocomplete="new-password" minlength="8" required />
+          <p class="form-message" id="register-message" role="status" aria-live="polite"></p>
+          <button class="button button-submit" type="submit">Créer mon compte <span aria-hidden="true">→</span></button>
+          <p class="form-footnote">Déjà inscrit·e&nbsp;? <button class="text-button" type="button" data-open-tab="login">Connectez-vous</button></p>
+        </form>
+        <p class="privacy-note"><span aria-hidden="true">◈</span> Vos comptes sont enregistrés côté serveur.</p>
+      </section>
+    </main>
+    <footer class="site-footer"><span>© 2026 atelier</span><span>Un espace qui vous ressemble.</span></footer>
+
+    <script>
+      const loginForm = document.querySelector('#login-form');
+      const registerForm = document.querySelector('#register-form');
+      const loginMessage = document.querySelector('#login-message');
+      const registerMessage = document.querySelector('#register-message');
+
+      function showMessage(element, message, success = false) {
+        element.textContent = message;
+        element.classList.toggle('is-success', success);
+      }
+
+      function openTab(name) {
+        const isLogin = name === 'login';
+        loginForm.hidden = !isLogin;
+        registerForm.hidden = isLogin;
+        document.querySelector('#login-tab').classList.toggle('is-active', isLogin);
+        document.querySelector('#register-tab').classList.toggle('is-active', !isLogin);
+        document.querySelector('#login-tab').setAttribute('aria-selected', String(isLogin));
+        document.querySelector('#register-tab').setAttribute('aria-selected', String(!isLogin));
+        document.querySelector('#form-title').textContent = isLogin ? 'Ravi de vous revoir' : 'Rejoignez-nous';
+        document.querySelector('#form-subtitle').textContent = isLogin
+          ? 'Entrez vos informations pour vous connecter.'
+          : 'Créez votre compte en quelques secondes.';
+        history.replaceState(null, '', isLogin ? '#connexion' : '#inscription');
+      }
+
+      async function apiRequest(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: { 'Content-Type': 'application/json', ...options.headers },
+          credentials: 'same-origin',
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Une erreur est survenue.');
+        return data;
+      }
+
+      document.querySelectorAll('[data-tab], [data-open-tab]').forEach((button) => {
+        button.addEventListener('click', (event) => {
+          if (button.matches('[data-open-tab]')) event.preventDefault();
+          openTab(button.dataset.tab || button.dataset.openTab);
+        });
+      });
+
+      apiRequest('/api/me').then(() => window.location.replace('/index.html')).catch(() => {
+        openTab(window.location.hash === '#inscription' ? 'register' : 'login');
+      });
+
+      registerForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        showMessage(registerMessage, '');
+        const formData = new FormData(registerForm);
+        const email = String(formData.get('email')).trim().toLowerCase();
+        try {
+          await apiRequest('/api/register', {
+            method: 'POST',
+            body: JSON.stringify({ email, password: String(formData.get('password')) }),
+          });
+          registerForm.reset();
+          document.querySelector('#login-email').value = email;
+          openTab('login');
+          showMessage(loginMessage, 'Compte créé ! Vous pouvez maintenant vous connecter.', true);
+        } catch (error) {
+          showMessage(registerMessage, error.message);
+        }
+      });
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        showMessage(loginMessage, '');
+        const formData = new FormData(loginForm);
+        try {
+          await apiRequest('/api/login', {
+            method: 'POST',
+            body: JSON.stringify({
+              email: String(formData.get('email')).trim().toLowerCase(),
+              password: String(formData.get('password')),
+            }),
+          });
+          window.location.assign('/index.html');
+        } catch (error) {
+          showMessage(loginMessage, error.message);
+        }
+      });
+    </script>
+  </body>
+</html>

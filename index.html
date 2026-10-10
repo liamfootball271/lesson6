@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f1" />
+    <title>Mon espace — Atelier</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="auth.js" defer></script>
+  </head>
+  <body data-page="home">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Atelier, accueil">
+        <span class="brand-mark" aria-hidden="true">a.</span>
+        <span>atelier</span>
+      </a>
+      <nav class="header-nav" aria-label="Menu principal">
+        <span class="user-chip"><span class="user-dot" aria-hidden="true"></span><span id="user-name">Connecté·e</span></span>
+      </nav>
+    </header>
+
+    <main class="welcome-layout">
+      <section class="welcome-card" aria-labelledby="welcome-title">
+        <div class="success-icon" aria-hidden="true"><span>✓</span></div>
+        <p class="eyebrow"><span class="eyebrow-dot"></span> <span id="session-status">Votre session est active</span></p>
+        <h1 id="welcome-title">Vous êtes connecté<span class="accent-dot">.</span></h1>
+        <p class="welcome-copy" id="welcome-copy">Bienvenue dans votre espace personnel. Tout est prêt, vous pouvez profiter de votre session.</p>
+        <button class="button button-logout welcome-action" id="logout-button" type="button">Se déconnecter <span aria-hidden="true">⎋</span></button>
+        <div class="welcome-divider"></div>
+        <p class="welcome-footnote"><span aria-hidden="true">✦</span> Ravi de vous retrouver ici.</p>
+      </section>
+      <div class="welcome-orbit orbit-large" aria-hidden="true"></div>
+      <div class="welcome-orbit orbit-small" aria-hidden="true"></div>
+    </main>
+    <footer class="site-footer"><span>© 2026 atelier</span><span>Votre espace personnel</span></footer>
+  </body>
+</html>
