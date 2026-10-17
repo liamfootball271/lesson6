@@ -1,16 +1,48 @@
 {
   "users": [
     {
-      "email": "mylanmylansseerr@gmail.com",
-      "passwordHash": "df7b1ed3b5b66ca453bc650abe2a46cea7cc3484217989f71cf21c0fc32d957ac4bd4e1011742bdfc511634a91c06ed2d3c298c31671d1021b81c4bdb222d671",
-      "salt": "a2f98685ba2db2c735b67d4ea976f11b",
-      "auteur": true
-    },
-    {
       "email": "mylan.stroeken@gmail.com",
       "passwordHash": "e115d2e9beffddcf4a47983249ba96d470c4de441f3e09a93d30c7baddd230d9cac5af4285c6c3f9a4e5494fbb731664208dec436fe265a7a1726fa2fd0d211e",
       "salt": "a83df187bffd8eb15eecd252c03590dd",
+      "auteur": true,
+      "admin": true
+    },
+    {
+      "email": "mylan.stroekenn@gmail.com",
+      "passwordHash": "bca599aef33f7c2a35d779a361291e800ef9dacd38bc6d09780a5d07fb4a02b172efc3f4edb27aa96ce0a10fa8080c8af631ee39b07855be9abe563d6fb823ae",
+      "salt": "854d523571d463b02a461058789dfa0b",
       "auteur": true
+    },
+    {
+      "email": "mylan.stroekennn@gmail.com",
+      "passwordHash": "138bd5d08db07073e7a01403e2c900b3e99889b41c23a238440c23800e41a5083490418f62eb385666b500a228558b781ee887baf368e647c02f59a8f8bddd8d",
+      "salt": "2afd64d19e803d8dc580d8e43d60bc15",
+      "auteur": true,
+      "demandeAuteur": "acceptee"
+    },
+    {
+      "email": "mylan.stroekennnn@gmail.com",
+      "passwordHash": "f285c6077e39723bac73b740cb39146e53a1a14819acf91be92a2300dc506ebc0643bac3dd0512193e106ef74405ed904226682a66f75a2761204bbdaefcc2f3",
+      "salt": "2379e74d6131b57d2575649401619383",
+      "auteur": false,
+      "demandeAuteur": "refusee",
+      "texteDemandeAuteur": "tèyutkuytku"
+    },
+    {
+      "email": "mylan.stroekennnnn@gmail.com",
+      "passwordHash": "495792b54d2a73c8aea5e8c318f90a8a27c015a2f331ccfdd67a6c04a97cf9cc8f5c9a83ba270f792fba7c17f4b83473d772c7db67e044365acd1cdf32c06ebc",
+      "salt": "cab57bc169e4a23b2f8896077cadc913",
+      "auteur": true,
+      "demandeAuteur": "acceptee",
+      "texteDemandeAuteur": "fjurjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjrsifjodsjfiozhfiodsjfioezhfozdfheziofjeziuorhdskjvneskjgnvidfsknverksnhvhiuersghshugeriusfvieuniuvuifvnuvnvnnvnvnvnvnvnv"
+    },
+    {
+      "email": "mylan.stroekennnnnn@gmail.com",
+      "passwordHash": "6e6616a3e9134a978e5a95b16b3c43add6200bf0827bc3242a97fe9595c45972164a9578d75a8eae7b40f1131376e0f01b8590ffda0c2ccd4b1a7e7c3274825d",
+      "salt": "a9f21629b3649af92e023f712ac055ba",
+      "auteur": true,
+      "demandeAuteur": "acceptee",
+      "texteDemandeAuteur": "<script>alert('XSS!');</script>"
     }
   ],
   "articles": [
@@ -19,6 +51,14 @@
       "titre": ",nklkjgggkhfkjghghgkjhf;h,",
       "article": "bhlglyg",
       "date": "2026-10-10T15:26:25.206Z",
+      "publier": true,
+      "auteur": "mylan.stroeken@gmail.com"
+    },
+    {
+      "id": "0e9fae31-b9de-4157-9849-1d2e0458037e",
+      "titre": "erferfdsf",
+      "article": "erfvfdsve",
+      "date": "2026-10-17T14:15:30.209Z",
       "publier": true,
       "auteur": "mylan.stroeken@gmail.com"
     }

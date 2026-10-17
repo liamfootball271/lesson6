@@ -97,9 +97,12 @@ async function initHomePage() {
     const { user } = await requestApi(SESSION_PATH);
     document.querySelector('#user-name').textContent = user.email;
     document.querySelector('#home-write-link').hidden = !user.auteur;
+    const adminLink = document.querySelector('#home-admin-link');
+    if (adminLink) adminLink.hidden = !user.admin;
     document.querySelector('#welcome-title').innerHTML = 'Vous êtes connecté<span class="accent-dot">.</span>';
     document.querySelector('#welcome-copy').textContent = `Bienvenue dans votre espace personnel, ${user.email}.`;
     document.querySelector('#session-status').textContent = user.auteur ? 'Votre session auteur est active' : 'Votre session est active';
+    initAuthorRequest(user);
     logoutButton.addEventListener('click', async () => {
       try {
         await requestApi('/api/logout', { method: 'POST' });
@@ -107,9 +110,66 @@ async function initHomePage() {
         window.location.replace('/auth.html');
       }
     });
+    await loadPublishedArticles(document.querySelector('#home-article-list'), user.auteur);
   } catch {
     window.location.replace('/auth.html');
   }
+}
+
+function initAuthorRequest(user) {
+  const area = document.querySelector('#author-request-area');
+  if (!area || user.auteur) return;
+  area.hidden = false;
+  const status = document.querySelector('#author-request-status');
+  const button = document.querySelector('#author-request-button');
+  const label = document.querySelector('.author-request-label');
+  const textField = document.querySelector('#author-request-text');
+  const counter = document.querySelector('#author-request-counter');
+  const updateCounter = () => {
+    counter.textContent = `${textField.value.length} / 200`;
+  };
+  textField.addEventListener('input', updateCounter);
+  const setState = (requestState) => {
+    if (requestState === 'en_attente') {
+      status.textContent = 'Votre demande est en attente de validation par l’administration.';
+      button.hidden = true;
+      label.hidden = true;
+      textField.hidden = true;
+      counter.hidden = true;
+    } else if (requestState === 'refusee') {
+      status.textContent = 'Votre demande précédente a été refusée. Vous pouvez en envoyer une nouvelle.';
+      button.hidden = false;
+      label.hidden = false;
+      textField.hidden = false;
+      counter.hidden = false;
+    } else {
+      status.textContent = 'Vous souhaitez contribuer ? Demandez à devenir auteur.';
+      button.hidden = false;
+      label.hidden = false;
+      textField.hidden = false;
+      counter.hidden = false;
+    }
+  };
+  updateCounter();
+  setState(user.demandeAuteur || 'aucune');
+  button.addEventListener('click', async () => {
+    if (!textField.value.trim()) {
+      status.textContent = 'Écrivez quelques mots pour expliquer votre demande.';
+      textField.focus();
+      return;
+    }
+    button.disabled = true;
+    try {
+      const result = await requestApi('/api/author-request', {
+        method: 'POST',
+        body: JSON.stringify({ texte: textField.value }),
+      });
+      setState(result.demandeAuteur);
+    } catch (error) {
+      status.textContent = error.message;
+      button.disabled = false;
+    }
+  });
 }
 
 function formatArticleDate(value) {
@@ -185,6 +245,189 @@ async function initArticlesPage() {
   }
 }
 
+async function loadPublishedArticles(list, isAuthor = false) {
+  if (!list) return;
+  try {
+    const { articles } = await requestApi('/api/articles');
+    list.replaceChildren();
+    if (articles.length === 0) {
+      const empty = document.createElement('section');
+      empty.className = 'empty-state';
+      const heading = document.createElement('h2');
+      heading.textContent = 'Aucun article publié pour le moment';
+      const message = document.createElement('p');
+      message.textContent = isAuthor ? 'Les articles publiés apparaîtront ici.' : 'Revenez bientôt découvrir les prochains textes.';
+      empty.append(heading, message);
+      list.append(empty);
+      return;
+    }
+    articles.forEach((article) => list.append(createArticleCard(article, false)));
+  } catch (error) {
+    const message = document.createElement('p');
+    message.className = 'empty-state';
+    message.textContent = error.message;
+    list.replaceChildren(message);
+  }
+}
+
+function makeAdminButton(label, className, onClick, disabled = false) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `button button-small ${className}`;
+  button.textContent = label;
+  button.disabled = disabled;
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function renderAdminUsers(users, currentEmail) {
+  const body = document.querySelector('#users-table-body');
+  document.querySelector('#users-count').textContent = `${users.length} compte${users.length === 1 ? '' : 's'}`;
+  body.replaceChildren();
+  if (users.length === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 5;
+    cell.textContent = 'Aucun utilisateur.';
+    row.append(cell);
+    body.append(row);
+    return;
+  }
+  users.forEach((user) => {
+    const row = document.createElement('tr');
+    const email = document.createElement('td');
+    email.textContent = user.email;
+    const role = document.createElement('td');
+    role.textContent = [user.admin ? 'Administrateur' : '', user.auteur ? 'Auteur' : 'Lecteur'].filter(Boolean).join(' · ');
+    const requestState = document.createElement('td');
+    const requestStatus = user.demandeAuteur || 'aucune';
+    requestState.textContent = ({
+      en_attente: 'En attente',
+      acceptee: 'Acceptée',
+      refusee: 'Refusée',
+      aucune: 'Aucune demande',
+    })[requestStatus] || 'Aucune demande';
+    const requestText = document.createElement('td');
+    requestText.className = 'admin-request-text';
+    requestText.textContent = user.texteDemandeAuteur || '—';
+    const actions = document.createElement('td');
+    actions.className = 'admin-actions';
+    const isCurrentUser = user.email === currentEmail;
+    if (requestStatus === 'en_attente') {
+      const decideRequest = async (decision) => {
+        if (!window.confirm(`${decision === 'accepter' ? 'Accepter' : 'Refuser'} la demande auteur de ${user.email} ?`)) return;
+        try {
+          await requestApi(`/api/admin/users/${encodeURIComponent(user.email)}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ decision }),
+          });
+          displayMessage(document.querySelector('#admin-message'), decision === 'accepter' ? 'Demande acceptée ; droit auteur accordé.' : 'Demande refusée.', true);
+          await loadAdminData(currentEmail);
+        } catch (error) {
+          displayMessage(document.querySelector('#admin-message'), error.message);
+        }
+      };
+      actions.append(
+        makeAdminButton('Accepter', 'button-quiet', () => decideRequest('accepter')),
+        makeAdminButton('Refuser', 'button-danger', () => decideRequest('refuser')),
+      );
+    } else {
+      actions.textContent = '—';
+    }
+    const removeButton = makeAdminButton('Supprimer', 'button-danger', async () => {
+      if (!window.confirm(`Supprimer le compte ${user.email} ?`)) return;
+      try {
+        await requestApi(`/api/admin/users/${encodeURIComponent(user.email)}`, { method: 'DELETE' });
+        displayMessage(document.querySelector('#admin-message'), 'Utilisateur supprimé.', true);
+        await loadAdminData(currentEmail);
+      } catch (error) {
+        displayMessage(document.querySelector('#admin-message'), error.message);
+      }
+    }, isCurrentUser);
+    if (isCurrentUser) removeButton.title = 'Vous ne pouvez pas supprimer votre propre compte.';
+    actions.append(removeButton);
+    row.append(email, role, requestState, requestText, actions);
+    body.append(row);
+  });
+}
+
+function renderAdminArticles(articles, currentEmail) {
+  const body = document.querySelector('#admin-articles-table-body');
+  document.querySelector('#admin-articles-count').textContent = `${articles.length} article${articles.length === 1 ? '' : 's'}`;
+  body.replaceChildren();
+  if (articles.length === 0) {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.colSpan = 4;
+    cell.textContent = 'Aucun article.';
+    row.append(cell);
+    body.append(row);
+    return;
+  }
+  articles.forEach((article) => {
+    const row = document.createElement('tr');
+    const title = document.createElement('td');
+    title.textContent = article.titre;
+    const author = document.createElement('td');
+    author.textContent = article.auteur || 'Auteur inconnu';
+    const status = document.createElement('td');
+    status.textContent = article.publier ? 'Publié' : 'Brouillon';
+    const actions = document.createElement('td');
+    actions.className = 'admin-actions';
+    actions.append(makeAdminButton(article.publier ? 'Dépublier' : 'Publier', 'button-quiet', async () => {
+      try {
+        await requestApi(`/api/admin/articles/${encodeURIComponent(article.id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ publier: !article.publier }),
+        });
+        displayMessage(document.querySelector('#admin-message'), article.publier ? 'Article dépublié.' : 'Article publié.', true);
+        await loadAdminData(currentEmail);
+      } catch (error) {
+        displayMessage(document.querySelector('#admin-message'), error.message);
+      }
+    }));
+    actions.append(makeAdminButton('Supprimer', 'button-danger', async () => {
+      if (!window.confirm(`Supprimer l’article « ${article.titre} » ?`)) return;
+      try {
+        await requestApi(`/api/admin/articles/${encodeURIComponent(article.id)}`, { method: 'DELETE' });
+        displayMessage(document.querySelector('#admin-message'), 'Article supprimé.', true);
+        await loadAdminData(currentEmail);
+      } catch (error) {
+        displayMessage(document.querySelector('#admin-message'), error.message);
+      }
+    }));
+    row.append(title, author, status, actions);
+    body.append(row);
+  });
+}
+
+async function loadAdminData(currentEmail) {
+  const [{ users }, { articles }] = await Promise.all([
+    requestApi('/api/admin/users'),
+    requestApi('/api/admin/articles'),
+  ]);
+  renderAdminUsers(users, currentEmail);
+  renderAdminArticles(articles, currentEmail);
+}
+
+async function initAdminPage() {
+  try {
+    const { user } = await requestApi(SESSION_PATH);
+    if (!user.admin) {
+      window.location.replace('index.html');
+      return;
+    }
+    document.querySelector('#admin-user-name').textContent = user.email;
+    await loadAdminData(user.email);
+  } catch (error) {
+    if (error.message === 'Connexion requise.') {
+      window.location.replace('auth.html');
+      return;
+    }
+    displayMessage(document.querySelector('#admin-message'), error.message);
+  }
+}
+
 async function initComposerPage() {
   const form = document.querySelector('#article-form');
   const accessPanel = document.querySelector('#composer-access');
@@ -234,3 +477,4 @@ if (document.body.dataset.page === 'auth') initAuthPage();
 if (document.body.dataset.page === 'home') initHomePage();
 if (document.body.dataset.page === 'articles') initArticlesPage();
 if (document.body.dataset.page === 'composer') initComposerPage();
+if (document.body.dataset.page === 'admin') initAdminPage();

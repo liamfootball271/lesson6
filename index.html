@@ -17,6 +17,7 @@
       <nav class="header-nav" aria-label="Menu principal">
         <a class="nav-link" href="articles.html">Tous les articles</a>
         <a class="nav-link" id="home-write-link" href="write-article.html" hidden>Écrire un article</a>
+        <a class="nav-link" id="home-admin-link" href="admin.html" hidden>Administration</a>
         <span class="user-chip"><span class="user-dot" aria-hidden="true"></span><span id="user-name">Connecté·e</span></span>
       </nav>
     </header>
@@ -27,6 +28,13 @@
         <p class="eyebrow"><span class="eyebrow-dot"></span> <span id="session-status">Votre session est active</span></p>
         <h1 id="welcome-title">Vous êtes connecté<span class="accent-dot">.</span></h1>
         <p class="welcome-copy" id="welcome-copy">Bienvenue dans votre espace personnel. Tout est prêt, vous pouvez profiter de votre session.</p>
+        <div class="author-request" id="author-request-area" hidden>
+          <p class="welcome-copy" id="author-request-status" role="status" aria-live="polite"></p>
+          <label class="author-request-label" for="author-request-text">Expliquez brièvement votre motivation (200 caractères maximum)</label>
+          <textarea id="author-request-text" class="author-request-text" maxlength="200" rows="3" placeholder="Pourquoi souhaitez-vous devenir auteur ?"></textarea>
+          <span class="author-request-counter" id="author-request-counter">0 / 200</span>
+          <button class="button button-quiet author-request-button" id="author-request-button" type="button">Demander le droit d’écrire</button>
+        </div>
         <button class="button button-logout welcome-action" id="logout-button" type="button">Se déconnecter <span aria-hidden="true">⎋</span></button>
         <div class="welcome-divider"></div>
         <p class="welcome-footnote"><span aria-hidden="true">✦</span> Ravi de vous retrouver ici.</p>
@@ -34,6 +42,17 @@
       <div class="welcome-orbit orbit-large" aria-hidden="true"></div>
       <div class="welcome-orbit orbit-small" aria-hidden="true"></div>
     </main>
+    <section class="articles-layout home-articles" aria-labelledby="home-articles-title">
+      <div class="articles-heading">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Le journal d’atelier</p>
+        <h2 id="home-articles-title">Articles publiés<span class="accent-dot">.</span></h2>
+        <p>Découvrez les derniers textes partagés avec la communauté.</p>
+      </div>
+      <div class="article-list" id="home-article-list" aria-live="polite">
+        <p class="empty-state">Chargement des articles…</p>
+      </div>
+      <p><a class="nav-link" href="articles.html">Voir tous les articles →</a></p>
+    </section>
     <footer class="site-footer"><span>© 2026 atelier</span><span>Votre espace personnel</span></footer>
   </body>
 </html>

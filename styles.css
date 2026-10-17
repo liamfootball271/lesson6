@@ -82,6 +82,7 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.9px; }
 .articles-layout::before, .composer-layout::before, .admin-layout::before { position: absolute; z-index: -1; top: -105px; right: -150px; width: 310px; height: 310px; border: 1px solid #8174ed20; border-radius: 50%; background: radial-gradient(circle at 45% 48%, #fff9e2a8 0 13%, #ffd9ca68 14% 31%, #d8d4ff30 48%, transparent 70%); box-shadow: 0 0 0 26px #8174ed08, 0 0 0 54px #8174ed06; content: ''; pointer-events: none; }
 .articles-heading { margin-bottom: 30px; }
 .articles-heading h1, .composer-card h1 { margin: 14px 0 8px; font-size: clamp(36px, 5vw, 48px); line-height: 1.15; }
+.home-articles .articles-heading h2 { margin: 14px 0 8px; font-size: clamp(30px, 4vw, 40px); line-height: 1.2; }
 .articles-heading > p:not(.eyebrow), .form-heading > p:last-child { color: var(--muted); font-size: 13px; line-height: 1.7; }
 .articles-heading .button { margin-top: 15px; padding: 0 17px; }
 .article-list { display: grid; gap: 16px; }
@@ -127,6 +128,7 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.9px; }
 .admin-user-table .admin-actions .button { white-space: nowrap; }
 .admin-table th { padding: 11px 12px; border-bottom: 1px solid var(--line); color: #85889a; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .45px; }
 .admin-table td { padding: 13px 12px; border-bottom: 1px solid #f0f0f5; color: #56596d; font-size: 12px; vertical-align: middle; }
+.admin-request-text { min-width: 210px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .admin-table tr:last-child td { border-bottom: 0; }
 .admin-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .button-danger { min-height: 34px; padding: 0 12px; color: #b83f50; background: #fff; border: 1px solid #f0d5d9; box-shadow: none; }
@@ -141,6 +143,16 @@ h1, h2 { font-family: Manrope, sans-serif; letter-spacing: -1.9px; }
 .welcome-card h1 { margin: 18px 0 14px; font-size: clamp(35px, 5vw, 49px); line-height: 1.18; font-weight: 800; }
 .accent-dot { color: var(--purple); }
 .welcome-copy { max-width: 405px; margin: 0 auto; color: #777b90; font-size: 13px; line-height: 1.8; }
+.author-request { margin-top: 20px; }
+.author-request[hidden], .author-request-button[hidden] { display: none; }
+.author-request .welcome-copy { margin-bottom: 13px; }
+.author-request-label { display: block; margin: 0 auto 7px; color: #55596d; font-size: 11px; font-weight: 700; }
+.author-request-label[hidden] { display: none; }
+.author-request-text { width: min(100%, 400px); min-height: 76px; padding: 10px 12px; border: 1px solid #e4e5ed; border-radius: 9px; outline: none; color: var(--ink); background: #fff; font: inherit; font-size: 12px; resize: vertical; }
+.author-request-text:focus { border-color: #9389f2; box-shadow: 0 0 0 3px #8174ed18; }
+.author-request-text[hidden], .author-request-counter[hidden] { display: none; }
+.author-request-counter { display: block; width: min(100%, 400px); margin: 4px auto 12px; color: #9698a7; text-align: right; font-size: 10px; }
+.author-request-button { min-height: 40px; padding: 0 16px; font-size: 12px; }
 #welcome-name { display: inline-block; margin-left: 4px; color: #55596e; font-weight: 700; }
 .welcome-divider { width: 42px; height: 2px; margin: 28px auto 20px; border-radius: 5px; background: #d4cffd; }
 .welcome-footnote { margin: 0; color: #898c9e; font-size: 11px; }

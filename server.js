@@ -12,7 +12,7 @@ const sessionDuration = 8 * 60 * 60 * 1000;
 const sessions = new Map();
 const scrypt = promisify(crypto.scrypt);
 const pepper = process.env.PASSWORD_PEPPER || 'change-this-development-pepper';
-const publicFiles = new Set(['/','/index.html','/login.html','/auth.html','/auth.js','/styles.css','/articles.html','/write-article.html']);
+const publicFiles = new Set(['/','/index.html','/login.html','/auth.html','/auth.js','/styles.css','/articles.html','/write-article.html','/admin.html']);
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -82,7 +82,12 @@ function getSessionUser(request) {
     return null;
   }
   const user = readDatabase().users.find((entry) => entry.email === session.email);
-  return user ? { email: user.email, auteur: user.auteur === true } : null;
+  return user ? {
+    email: user.email,
+    auteur: user.auteur === true,
+    admin: user.admin === true || (process.env.ADMIN_EMAIL || '').trim().toLowerCase() === user.email,
+    demandeAuteur: user.demandeAuteur || 'aucune',
+  } : null;
 }
 
 async function handleApi(request, response, pathname) {
@@ -109,7 +114,7 @@ async function handleApi(request, response, pathname) {
 
     const salt = crypto.randomBytes(16).toString('hex');
     const passwordHash = (await scrypt(`${password}${pepper}`, salt, 64)).toString('hex');
-    database.users.push({ email, passwordHash, salt, auteur: false });
+    database.users.push({ email, passwordHash, salt, auteur: false, demandeAuteur: 'aucune' });
     writeDatabase(database);
     sendJson(response, 201, { message: 'Compte créé.' });
     return;
@@ -151,11 +156,172 @@ async function handleApi(request, response, pathname) {
     return;
   }
 
+  if (request.method === 'POST' && pathname === '/api/author-request') {
+    const user = getSessionUser(request);
+    if (!user) {
+      sendJson(response, 401, { error: 'Connectez-vous pour demander le droit auteur.' });
+      return;
+    }
+    if (user.auteur) {
+      sendJson(response, 400, { error: 'Votre compte possède déjà le droit auteur.' });
+      return;
+    }
+    if (user.demandeAuteur === 'en_attente') {
+      sendJson(response, 409, { error: 'Votre demande est déjà en attente de validation.' });
+      return;
+    }
+    let body;
+    try {
+      body = await readJsonBody(request);
+    } catch (error) {
+      sendJson(response, 400, { error: error.message });
+      return;
+    }
+    const texteDemande = typeof body.texte === 'string' ? body.texte.trim() : '';
+    if (!texteDemande || texteDemande.length > 200) {
+      sendJson(response, 400, { error: 'Saisissez un message de motivation de 200 caractères maximum.' });
+      return;
+    }
+    const database = readDatabase();
+    const target = database.users.find((entry) => entry.email === user.email);
+    if (!target) {
+      sendJson(response, 404, { error: 'Utilisateur introuvable.' });
+      return;
+    }
+    target.demandeAuteur = 'en_attente';
+    target.texteDemandeAuteur = texteDemande;
+    writeDatabase(database);
+    sendJson(response, 200, { demandeAuteur: target.demandeAuteur, texteDemandeAuteur: target.texteDemandeAuteur });
+    return;
+  }
+
+  if (pathname.startsWith('/api/admin/')) {
+    const user = getSessionUser(request);
+    if (!user) {
+      sendJson(response, 401, { error: 'Connexion requise.' });
+      return;
+    }
+    if (!user.admin) {
+      sendJson(response, 403, { error: 'Accès réservé à l’administration.' });
+      return;
+    }
+
+    const database = readDatabase();
+    if (request.method === 'GET' && pathname === '/api/admin/users') {
+      const users = database.users.map(({ email, auteur, admin }) => ({
+        email,
+        auteur: auteur === true,
+        admin: admin === true || (process.env.ADMIN_EMAIL || '').trim().toLowerCase() === email,
+        demandeAuteur: database.users.find((entry) => entry.email === email)?.demandeAuteur || 'aucune',
+        texteDemandeAuteur: database.users.find((entry) => entry.email === email)?.texteDemandeAuteur || '',
+      }));
+      sendJson(response, 200, { users });
+      return;
+    }
+    if (request.method === 'GET' && pathname === '/api/admin/articles') {
+      const articles = database.articles
+        .slice()
+        .sort((first, second) => Date.parse(second.date) - Date.parse(first.date));
+      sendJson(response, 200, { articles });
+      return;
+    }
+
+    const userMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)$/);
+    if (request.method === 'DELETE' && userMatch) {
+      const email = userMatch[1].trim().toLowerCase();
+      if (email === user.email) {
+        sendJson(response, 400, { error: 'Vous ne pouvez pas supprimer votre propre compte.' });
+        return;
+      }
+      const target = database.users.find((entry) => entry.email === email);
+      if (!target) {
+        sendJson(response, 404, { error: 'Utilisateur introuvable.' });
+        return;
+      }
+      const targetIsAdmin = target.admin === true || (process.env.ADMIN_EMAIL || '').trim().toLowerCase() === target.email;
+      const admins = database.users.filter((entry) => entry.admin === true || (process.env.ADMIN_EMAIL || '').trim().toLowerCase() === entry.email);
+      if (targetIsAdmin && admins.length <= 1) {
+        sendJson(response, 400, { error: 'Impossible de supprimer le dernier administrateur.' });
+        return;
+      }
+      database.users = database.users.filter((entry) => entry.email !== email);
+      writeDatabase(database);
+      for (const [sessionId, session] of sessions) {
+        if (session.email === email) sessions.delete(sessionId);
+      }
+      sendJson(response, 200, { message: 'Utilisateur supprimé.' });
+      return;
+    }
+    if (request.method === 'PATCH' && userMatch) {
+      let body;
+      try {
+        body = await readJsonBody(request);
+      } catch (error) {
+        sendJson(response, 400, { error: error.message });
+        return;
+      }
+      if (!['accepter', 'refuser'].includes(body.decision)) {
+        sendJson(response, 400, { error: 'Choisissez d’accepter ou de refuser la demande auteur.' });
+        return;
+      }
+      const target = database.users.find((entry) => entry.email === userMatch[1].trim().toLowerCase());
+      if (!target) {
+        sendJson(response, 404, { error: 'Utilisateur introuvable.' });
+        return;
+      }
+      if (target.demandeAuteur !== 'en_attente') {
+        sendJson(response, 409, { error: 'Cet utilisateur n’a pas de demande auteur en attente.' });
+        return;
+      }
+      target.auteur = body.decision === 'accepter';
+      target.demandeAuteur = body.decision === 'accepter' ? 'acceptee' : 'refusee';
+      writeDatabase(database);
+      sendJson(response, 200, { user: { email: target.email, auteur: target.auteur === true, demandeAuteur: target.demandeAuteur } });
+      return;
+    }
+
+    const articleMatch = pathname.match(/^\/api\/admin\/articles\/([^/]+)$/);
+    if (request.method === 'DELETE' && articleMatch) {
+      const index = database.articles.findIndex((article) => article.id === articleMatch[1]);
+      if (index === -1) {
+        sendJson(response, 404, { error: 'Article introuvable.' });
+        return;
+      }
+      database.articles.splice(index, 1);
+      writeDatabase(database);
+      sendJson(response, 200, { message: 'Article supprimé.' });
+      return;
+    }
+    if (request.method === 'PATCH' && articleMatch) {
+      let body;
+      try {
+        body = await readJsonBody(request);
+      } catch (error) {
+        sendJson(response, 400, { error: error.message });
+        return;
+      }
+      if (typeof body.publier !== 'boolean') {
+        sendJson(response, 400, { error: 'Indiquez si l’article doit être publié.' });
+        return;
+      }
+      const article = database.articles.find((entry) => entry.id === articleMatch[1]);
+      if (!article) {
+        sendJson(response, 404, { error: 'Article introuvable.' });
+        return;
+      }
+      article.publier = body.publier;
+      writeDatabase(database);
+      sendJson(response, 200, { article });
+      return;
+    }
+    sendJson(response, 404, { error: 'Route d’administration introuvable.' });
+    return;
+  }
+
   if (request.method === 'GET' && pathname === '/api/articles') {
     const database = readDatabase();
-    const user = getSessionUser(request);
     const articles = database.articles
-      .filter((article) => article.publier === true || user?.auteur === true)
+      .filter((article) => article.publier === true)
       .sort((first, second) => Date.parse(second.date) - Date.parse(first.date));
     sendJson(response, 200, { articles });
     return;

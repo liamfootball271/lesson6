@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff8f1" />
+    <title>Administration — Atelier</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="auth.js" defer></script>
+  </head>
+  <body data-page="admin">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Atelier, accueil">
+        <span class="brand-mark" aria-hidden="true">a.</span>
+        <span>atelier</span>
+      </a>
+      <nav class="header-nav" aria-label="Menu principal">
+        <a class="nav-link" href="index.html">Accueil</a>
+        <a class="nav-link" href="articles.html">Articles publiés</a>
+        <span class="user-chip"><span class="user-dot" aria-hidden="true"></span><span id="admin-user-name">Administration</span></span>
+      </nav>
+    </header>
+
+    <main class="admin-layout">
+      <section class="articles-heading" aria-labelledby="admin-title">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Gestion du site</p>
+        <h1 id="admin-title">Administration<span class="accent-dot">.</span></h1>
+        <p>Gérez les comptes et modérez les articles publiés ou en brouillon.</p>
+      </section>
+      <p class="form-message" id="admin-message" role="status" aria-live="polite"></p>
+      <section class="admin-section" aria-labelledby="users-title">
+        <div class="admin-section-heading">
+          <div>
+            <p class="eyebrow">Comptes</p>
+            <h2 id="users-title">Utilisateurs</h2>
+          </div>
+          <span class="admin-caption" id="users-count"></span>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Adresse e-mail</th><th>Rôle</th><th>Demande auteur</th><th>Motivation</th><th>Actions</th></tr></thead>
+            <tbody id="users-table-body"><tr><td colspan="5">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="admin-section" aria-labelledby="admin-articles-title">
+        <div class="admin-section-heading">
+          <div>
+            <p class="eyebrow">Contenu</p>
+            <h2 id="admin-articles-title">Articles</h2>
+          </div>
+          <span class="admin-caption" id="admin-articles-count"></span>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Titre</th><th>Auteur</th><th>État</th><th>Actions</th></tr></thead>
+            <tbody id="admin-articles-table-body"><tr><td colspan="4">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>© 2026 atelier</span><span>Administration</span></footer>
+  </body>
+</html>
