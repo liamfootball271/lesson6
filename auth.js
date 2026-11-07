@@ -1,4 +1,42 @@
 const SESSION_PATH = '/api/me';
+const THEME_KEY = 'atelier-theme';
+
+function applyTheme(theme) {
+  const selectedTheme = theme === 'dark' ? 'dark' : 'light';
+  document.body.dataset.theme = selectedTheme;
+  const toggleButton = document.querySelector('#theme-toggle');
+  if (toggleButton) {
+    toggleButton.setAttribute('aria-pressed', String(selectedTheme === 'dark'));
+    toggleButton.textContent = selectedTheme === 'dark' ? '☀️ Mode clair' : '🌙 Mode sombre';
+    toggleButton.title = selectedTheme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre';
+  }
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute('content', selectedTheme === 'dark' ? '#0d1b18' : '#fff8f1');
+  }
+  localStorage.setItem(THEME_KEY, selectedTheme);
+}
+
+function initThemeToggle() {
+  const nav = document.querySelector('.header-nav');
+  if (!nav || document.querySelector('#theme-toggle')) return;
+
+  const toggleButton = document.createElement('button');
+  toggleButton.type = 'button';
+  toggleButton.id = 'theme-toggle';
+  toggleButton.className = 'theme-toggle';
+  toggleButton.setAttribute('aria-label', 'Changer le thème');
+  toggleButton.addEventListener('click', () => {
+    const currentTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(currentTheme);
+  });
+
+  nav.appendChild(toggleButton);
+
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  applyTheme(savedTheme || preferredTheme);
+}
 
 async function requestApi(path, options = {}) {
   const response = await fetch(path, {
@@ -472,6 +510,8 @@ async function initComposerPage() {
     }
   });
 }
+
+initThemeToggle();
 
 if (document.body.dataset.page === 'auth') initAuthPage();
 if (document.body.dataset.page === 'home') initHomePage();
